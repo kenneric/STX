@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Stock Analysis</title>
+        <link rel="stylesheet" type="text/css" href="../css/main.css"/>
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;500&display=swap" rel="stylesheet"> 
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    </head>
+    <body>
+        <header>
+            <h1>STX - ALL</h1>
+            <nav>
+                <a href="http://localhost:3000">Home</a>
+                <a href="http://localhost:3000/search">Search</a>
+                <a href="#">More</a>
+            </nav>
+            <input type="text" id="searchBox" name="searchText"/>
+            <input type="button" id="submit" value="Go" onclick="redir()"/>
+        </header>
+        <div id="app">
+            <div id="output"></div>
+        </div>
+        <footer></footer>
+        <script>
+        function redir(){
+            var search = document.getElementById("searchBox").value;
+            
+            var url = "http://localhost:3000/search/";
+        
+            var location = url + search;
+        
+            window.location.href=location;
+        }
+
+        function decode(encodedString) {
+                var translate_re = /&(nbsp|amp|quot|lt|gt);/g;
+                var translate = {
+                    "nbsp":" ",
+                    "amp" : "&",
+                    "quot": "\"",
+                    "lt"  : "<",
+                    "gt"  : ">"
+                };
+                return encodedString.replace(translate_re, function(match, entity) {
+                    return translate[entity];
+                }).replace(/&#(\d+);/gi, function(match, numStr) {
+                    var num = parseInt(numStr, 10);
+                    return String.fromCharCode(num);
+                });
+            }
+
+            // making an object from the recieved data
+            var info = decode('<%= infoData %>');
+            var data = JSON.parse(info);
+
+            console.log(data);
+            
+
+            
+        </script>
+    </body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Stock Analysis</title>
+        <link rel="stylesheet" type="text/css" href="../css/main.css"/>
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@300;500&display=swap" rel="stylesheet"> 
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    </head>
+    <body>
+        <header>
+            <h1>STX Search</h1>
+            <nav>
+                <a href="http://localhost:3000">Home</a>
+                <a href="http://localhost:3000/search">Search</a>
+                <a href="#">More</a>
+            </nav>
+            <input type="text" id="searchBox" name="searchText"/>
+            <input type="button" id="submit" value="Go" onclick="redir()"/>
+        </header>
+        <div id="app">
+            <div id="info"></div>
+            <canvas id="graph"></canvas>
+            
+        </div>
+        <footer></footer>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+        <script>
+
+            // making an object from the recieved data
+            var info = decode('<%= infoData %>');
+            var data = JSON.parse(info);
+
+            console.log(data);
+            
+            function decode(encodedString) {
+                var translate_re = /&(nbsp|amp|quot|lt|gt);/g;
+                var translate = {
+                    "nbsp":" ",
+                    "amp" : "&",
+                    "quot": "\"",
+                    "lt"  : "<",
+                    "gt"  : ">"
+                };
+                return encodedString.replace(translate_re, function(match, entity) {
+                    return translate[entity];
+                }).replace(/&#(\d+);/gi, function(match, numStr) {
+                    var num = parseInt(numStr, 10);
+                    return String.fromCharCode(num);
+                });
+            }
+            if(data.status == 'ok'){
+                var outputDiv = document.getElementById('info');
+                var output = '';
+                output += `<h2>${data.meta.symbol}</h2>`;
+                output += '<ul>';
+                output += `<li><span>Exchange:</span> ${data.meta.exchange}</li>`;
+                output += `<li><span>Type:</span> ${data.meta.type}</li>`;
+                output += `<li><span>Currency:</span> ${data.meta.currency}</li>`;
+                output += `<li><span>Interval:</span> ${data.meta.interval}</li>`;
+                output += `<li><span>Current Price:</span> $${data.values[0].close}</li>`;
+                output += '</ul>';
+
+                outputDiv.innerHTML = output;
+
+                var times = [];
+                var values = [];
+                
+                var initaialDate = data.values[0].datetime;
+
+                var year = initaialDate.substr(0,initaialDate.indexOf('-'));
+                var month = initaialDate.substr(5,2);
+                var day = initaialDate.substr(8,2);
+
+                for(var i=data.values.length-1;i>=0;i--){
+
+                    var dateTime = data.values[i].datetime;
+                    var time = dateTime.substr(11);
+                    var hour = parseInt(time.substr(0,2));
+                    
+                    if(hour>12){
+                        hour = hour - 12;
+                    }
+                    time = hour + time.substr(2,3);
+                    console.log(time)
+                    times.push(time);
+                    values.push(data.values[i].close);
+                }
+
+
+                var ctx = document.getElementById('graph').getContext('2d');
+                
+                var myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: times,
+                        datasets: [{
+                            label: `${data.meta.symbol} - ${year} - ${month} - ${day}`,
+                            data: values,
+                            lineTension:0.1,
+                            borderWidth: 2,
+                            fill:false,
+                            borderColor:'rgba(204, 68, 68, 1)',
+                            pointBackgroundColor:'rgba(204, 68, 68, 1)',
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            yAxes: [{
+                                ticks: {
+                                    beginAtZero: false
+                                }
+                            }]
+                        }
+                    }
+                });
+
+            }
+            else{
+                var outputDiv = document.getElementById('info');
+                var output = '';
+                output += `<h2>Could not find ${data.meta.symbol}</h2>`;
+                outputDiv.innerHTML = output;
+            }
+            
+        
+        function redir(){
+            var search = document.getElementById("searchBox").value;
+            
+            var url = "http://localhost:3000/search/";
+        
+            var location = url + search;
+        
+            window.location.href=location;
+        }
+        </script>
+    </body>
+</html>
